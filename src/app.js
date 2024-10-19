@@ -111,7 +111,7 @@ export class CurrencyReplacer extends LitElement {
   async updateText(symbol) {
     this.transformed = this.initialValue.replace(/у\.е\./g, symbol);
     const hotels = findLineWithEmoji(this.transformed, '⭐️');
-    if (hotels) {
+    if (hotels?.length) {
       const links = await find(hotels);
       hotels.forEach((hotel, index) => {
         const hotelLink = links[index];
@@ -171,7 +171,7 @@ const find = async (queries) => {
   myHeaders.append("X-API-KEY", "223984764572c70e9c16ca35e99d432fdce963a0");
   myHeaders.append("Content-Type", "application/json");
 
-  const qs = queries.map(it => ({ q: it }));
+  const qs = queries.map(q => ({ q }));
   const raw = JSON.stringify(qs);
 
   const requestOptions = {

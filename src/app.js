@@ -81,7 +81,20 @@ export class CurrencyReplacer extends LitElement {
       bottom: 1rem;
       right: .25rem;
       background-color: green;
-    }
+      
+      }
+    
+      .copy::after {
+        content: "ть 📝";
+      }
+
+    .copy:focus {
+        background-color: teal;
+      }
+
+    .copy:focus::after {
+      content: "но ✅";
+      }
   `;
 
   constructor() {
@@ -124,10 +137,10 @@ export class CurrencyReplacer extends LitElement {
         <textarea 
           .value="${this.initialValue}"
           rows="40"
-          placeholder="Сюда текст"
+          placeholder="Сюда подборку"
           @input="${this.handleInput}" ></textarea>
         <textarea 
-          placeholder="Результат"
+          placeholder="И тут будет результат"
           rows="40"
           .value="${this.transformed}">
           </textarea>
@@ -143,7 +156,7 @@ export class CurrencyReplacer extends LitElement {
             Евро
           </button>
         </div>
-            <button class="copy" @click="${this.copyResult}">Копировать</button>
+            <button class="copy" @click="${this.copyResult}">Скопирова</button>
 
         </div>
       </div>

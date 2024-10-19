@@ -1,5 +1,10 @@
 import { LitElement, html, css } from 'lit';
 
+const API = "AIzaSyA-holUHRbiWchK4hLyPRhv1chHbzgLFqg";
+const CX = "03702172d88be4769"
+
+
+
 export class CurrencyReplacer extends LitElement {
   static properties = {
     transformed: { type: String },
@@ -7,9 +12,9 @@ export class CurrencyReplacer extends LitElement {
   };
 
   static styles = css`
-    ::host {
-      width: 100vw;
-      height: 100vh;
+    :host {
+      width: 100%;
+      // height: 100vh;
     }
 
     .container {
@@ -67,10 +72,13 @@ export class CurrencyReplacer extends LitElement {
       font-size: 1rem;
       resize: none;
       width: 40ch;
+      flex: 1;
     }
 
     .areas {
       position: relative;
+      display: flex;
+      gap: 5;
     }
 
     .copy {
@@ -92,8 +100,23 @@ export class CurrencyReplacer extends LitElement {
     this.requestUpdate();  // Ensures reactive re-rendering
   }
 
-  updateText(symbol) {
+  async updateText(symbol) {
     this.transformed = this.initialValue.replace(/у\.е\./g, symbol);
+    const hotels = findLineWithEmoji(this.transformed, '⭐️');
+    if (hotels) {
+      console.log(hotels)
+      await Promise.all(hotels.map(hotel => searchHotelOnBooking(hotel))).then(results => {
+        results.forEach((result, index) => {
+          if (result) {
+            const hotelName = hotels[index];
+            const hotelLink = result;
+            this.transformed = this.transformed.replace(hotelName, `${hotelName}\n${hotelLink}`);
+          }
+        });
+        this.requestUpdate();
+      });
+    }
+
     this.requestUpdate();  // Trigger re-render after change
   }
 
@@ -107,12 +130,12 @@ export class CurrencyReplacer extends LitElement {
         <div class="areas">
         <textarea 
           .value="${this.initialValue}"
-          rows="20"
+          rows="40"
           placeholder="Сюда текст"
           @input="${this.handleInput}" ></textarea>
         <textarea 
           placeholder="Результат"
-          rows="20"
+          rows="40"
           .value="${this.transformed}">
           </textarea>
               <div class="buttons">
@@ -136,3 +159,37 @@ export class CurrencyReplacer extends LitElement {
 }
 
 customElements.define('currency-replacer', CurrencyReplacer);
+
+async function searchHotelOnBooking(hotelName) {
+  const query = encodeURIComponent(hotelName);
+  const searchUrl = `https://www.googleapis.com/customsearch/v1?key=${API}&cx=${CX}&q=${query}`;
+
+  try {
+    const response = await fetch(searchUrl);
+    const data = await response.json();
+
+    // Find the first result that includes Booking.com in the link
+    const bookingResult = data.items.find(item => item.link.includes('booking.com'));
+
+    if (bookingResult) {
+      console.log('Booking.com Link:', bookingResult.link);
+      return bookingResult.link;  // Return the Booking.com link
+    } else {
+      console.log('No Booking.com result found.');
+      return null;
+    }
+  } catch (error) {
+    console.error('Error:', error);
+  }
+}
+
+function findLineWithEmoji(text, emoji) {
+  // Split the text into lines
+  const lines = text.split('\n');
+
+  // Find the line that contains the emoji
+  const lineWithEmoji = lines.filter(line => line.includes(emoji));
+
+  // Return the line if found, otherwise return null
+  return lineWithEmoji ? lineWithEmoji.map(it => it.trim()) : null;
+}

@@ -24,9 +24,13 @@ export class CurrencyReplacer extends LitElement {
     }
 
     .buttons {
-      margin-bottom: 1rem;
       display: flex;
       justify-content: flex-start;
+
+
+      position: absolute;
+      left: .5rem;
+      bottom: 1rem;
     }
 
     button {
@@ -99,20 +103,7 @@ export class CurrencyReplacer extends LitElement {
 
   render() {
     return html`
-      <div class="container">
-        <div class="buttons">
-          <button 
-            @click="${() => this.updateText('$')}" 
-            class="dollar-btn">
-            Доллар
-          </button>
-          <button 
-            @click="${() => this.updateText('€')}" 
-            class="euro-btn">
-            Евро
-          </button>
-        </div>
-        
+      <div class="container">      
         <div class="areas">
         <textarea 
           .value="${this.initialValue}"
@@ -124,6 +115,18 @@ export class CurrencyReplacer extends LitElement {
           rows="20"
           .value="${this.transformed}">
           </textarea>
+              <div class="buttons">
+          <button 
+            @click="${() => this.updateText('$')}" 
+            class="dollar-btn">
+            Доллар
+          </button>
+          <button 
+            @click="${() => this.updateText('€')}" 
+            class="euro-btn">
+            Евро
+          </button>
+        </div>
             <button class="copy" @click="${this.copyResult}">Копировать</button>
 
         </div>

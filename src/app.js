@@ -1,10 +1,5 @@
 import { LitElement, html, css } from 'lit';
 
-const API = "AIzaSyA-holUHRbiWchK4hLyPRhv1chHbzgLFqg";
-const CX = "03702172d88be4769"
-
-
-
 export class CurrencyReplacer extends LitElement {
   static properties = {
     transformed: { type: String },
@@ -104,17 +99,15 @@ export class CurrencyReplacer extends LitElement {
     this.transformed = this.initialValue.replace(/у\.е\./g, symbol);
     const hotels = findLineWithEmoji(this.transformed, '⭐️');
     if (hotels) {
-      console.log(hotels)
-      await Promise.all(hotels.map(hotel => searchHotelOnBooking(hotel))).then(results => {
-        results.forEach((result, index) => {
-          if (result) {
-            const hotelName = hotels[index];
-            const hotelLink = result;
-            this.transformed = this.transformed.replace(hotelName, `${hotelName}\n${hotelLink}`);
-          }
-        });
-        this.requestUpdate();
+      const links = await find(hotels);
+      hotels.forEach((hotel, index) => {
+        const hotelLink = links[index];
+        if (hotelLink) {
+          console.log(hotelLink);
+          this.transformed = this.transformed.replace(hotel, `${hotel}\n${hotelLink}`);
+        }
       });
+      this.requestUpdate();
     }
 
     this.requestUpdate();  // Trigger re-render after change
@@ -160,27 +153,25 @@ export class CurrencyReplacer extends LitElement {
 
 customElements.define('currency-replacer', CurrencyReplacer);
 
-async function searchHotelOnBooking(hotelName) {
-  const query = encodeURIComponent(hotelName);
-  const searchUrl = `https://www.googleapis.com/customsearch/v1?key=${API}&cx=${CX}&q=${query}`;
+const find = async (queries) => {
+  var myHeaders = new Headers();
+  myHeaders.append("X-API-KEY", "223984764572c70e9c16ca35e99d432fdce963a0");
+  myHeaders.append("Content-Type", "application/json");
 
-  try {
-    const response = await fetch(searchUrl);
-    const data = await response.json();
+  const qs = queries.map(it => ({ q: it }));
+  const raw = JSON.stringify(qs);
 
-    // Find the first result that includes Booking.com in the link
-    const bookingResult = data.items.find(item => item.link.includes('booking.com'));
+  const requestOptions = {
+    method: 'POST',
+    headers: myHeaders,
+    body: raw,
+    redirect: 'follow'
+  };
 
-    if (bookingResult) {
-      console.log('Booking.com Link:', bookingResult.link);
-      return bookingResult.link;  // Return the Booking.com link
-    } else {
-      console.log('No Booking.com result found.');
-      return null;
-    }
-  } catch (error) {
-    console.error('Error:', error);
-  }
+  const res = await fetch("https://google.serper.dev/search", requestOptions);
+  const data = await res.json();
+
+  return data.map(it => it.organic.find(it => it.link.includes('booking.com'))?.link ?? "");
 }
 
 function findLineWithEmoji(text, emoji) {
